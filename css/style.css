@@ -991,3 +991,37 @@ body {
   .prod-carousel { flex-wrap: wrap; }
   .prod-benefits-grid { grid-template-columns: 1fr; }
 }
+
+.menu-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.menu-toggle img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+@media (max-width: 1024px) {
+
+  .main-nav {
+    display: none;
+  }
+
+  .main-nav.is-open {
+    display: block;
+  }
+
+  .menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+}

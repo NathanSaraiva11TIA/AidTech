@@ -303,6 +303,8 @@ body {
   margin-bottom: 32px;
 }
 
+[data-theme="dark"] .hero-description { color: #ffffff; }
+
 .hero-buttons {
   display: flex;
   flex-wrap: wrap;

@@ -37,3 +37,30 @@ if (menuToggle && mainNav) {
     mainNav.classList.toggle('is-open');
   });
 }
+
+const productGrid = document.querySelector('.product-grid');
+const arrowLeft = document.querySelector('.carousel-arrow-left');
+const arrowRight = document.querySelector('.carousel-arrow-right');
+const dots = document.querySelectorAll('.carousel-dots .dot');
+
+if (productGrid && arrowLeft && arrowRight) {
+  function scrollToCard(direction) {
+    productGrid.scrollBy({ left: direction * productGrid.clientWidth, behavior: 'smooth' });
+  }
+
+  arrowLeft.addEventListener('click', function () { scrollToCard(-1); });
+  arrowRight.addEventListener('click', function () { scrollToCard(1); });
+
+  if (dots.length) {
+    let scrollTimeout;
+    productGrid.addEventListener('scroll', function () {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(function () {
+        const index = Math.round(productGrid.scrollLeft / productGrid.clientWidth);
+        dots.forEach(function (dot, i) {
+          dot.classList.toggle('is-active', i === index);
+        });
+      }, 100);
+    });
+  }
+}

@@ -58,6 +58,12 @@ if (menuToggle && mainNav) {
   menuToggle.addEventListener('click', function () {
     mainNav.classList.toggle('is-open');
   });
+
+  document.addEventListener('click', function (e) {
+    if (!mainNav.classList.contains('is-open')) return;
+    if (mainNav.contains(e.target) || menuToggle.contains(e.target)) return;
+    mainNav.classList.remove('is-open');
+  });
 }
 
 const productGrid = document.querySelector('.product-grid');

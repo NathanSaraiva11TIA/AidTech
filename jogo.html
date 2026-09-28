@@ -109,12 +109,14 @@
           </div>
         </div>
 
-        <div class="jogo-video-card">
-          <img src="assets/jogo/capa.png" alt="Tela do jogo AGROSENSE">
+        <div class="jogo-video-card" id="jogoVideoCard">
+          <video id="jogoVideo" poster="assets/jogo/capa.png" preload="metadata" playsinline>
+            <source src="assets/jogo/tcc%20sofia.mp4" type="video/mp4">
+          </video>
           <div class="jogo-video-overlay" aria-hidden="true"></div>
           <span class="jogo-video-eyebrow">Jogue e aprenda<br>no campo</span>
 
-          <button type="button" class="jogo-play-toggle" aria-label="Reproduzir vídeo">
+          <button type="button" class="jogo-play-toggle" id="jogoPlayToggle" aria-label="Reproduzir vídeo">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M8 5v14l11-7z"/>
             </svg>
@@ -126,19 +128,25 @@
           </span>
 
           <div class="jogo-video-controls">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-            <span class="jogo-video-time">0:00 / 1:02</span>
-            <div class="jogo-video-progress"><span class="jogo-video-progress-fill"></span></div>
+            <button type="button" class="jogo-video-control-btn" id="jogoControlsPlay" aria-label="Reproduzir/Pausar">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+            <span class="jogo-video-time" id="jogoVideoTime">0:00 / 0:00</span>
+            <div class="jogo-video-progress" id="jogoVideoProgress"><span class="jogo-video-progress-fill" id="jogoVideoProgressFill"></span></div>
             <div class="jogo-video-controls-right">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M11 5L6 9H3v6h3l5 4z"/>
-                <path d="M16 8.5c1.2 1 1.2 6 0 7"/>
-              </svg>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/>
-              </svg>
+              <button type="button" class="jogo-video-control-btn" id="jogoVideoMute" aria-label="Mudo/Som">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M11 5L6 9H3v6h3l5 4z"/>
+                  <path d="M16 8.5c1.2 1 1.2 6 0 7"/>
+                </svg>
+              </button>
+              <button type="button" class="jogo-video-control-btn" id="jogoVideoFullscreen" aria-label="Tela cheia">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>

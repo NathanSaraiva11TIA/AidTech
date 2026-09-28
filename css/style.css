@@ -2279,6 +2279,11 @@ body {
 }
 
 @media (max-width: 768px) {
+  .login-visual-bg { display: none; }
+  .login-visual-overlay { display: none; }
+  .login-visual { background: #0a0d12; }
+  .login-logo { margin: 0; }
+  .login-logo .logo-img { height: 48px; }
   .login-visual-content { padding: 28px 24px; gap: 18px; }
   .login-headline h1 { font-size: 1.7rem; }
   .login-features { grid-template-columns: 1fr; gap: 14px; }

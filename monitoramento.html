@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoramento — AGROSENSE</title>
+  <meta name="description" content="Painel AGROSENSE de monitoramento bovino: batimento cardíaco, temperatura, frequência respiratória e localização do animal.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/monitoramento.css">
+</head>
+<body class="mon-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo">
+        <img src="assets/icons/agrosense.png" data-src-dark="assets/icons/agrosense.png" data-src-light="assets/icons/Claro/AGROSENSE%20claro.png" alt="AGROSENSE" class="logo-img">
+      </a>
+
+      <nav class="main-nav" aria-label="Navegação principal">
+        <ul>
+          <li><a href="instrucoes.html">Instruções</a></li>
+          <li><a href="produtos.html">Produtos</a></li>
+          <li><a href="sobre.html">Sobre nós</a></li>
+          <li><a href="referencias.html">Referências</a></li>
+          <li><a href="jogo.html">Jogo</a></li>
+          <li class="nav-login-mobile"><a href="login.html">Login</a></li>
+        </ul>
+      </nav>
+
+      <button
+        class="menu-toggle"
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+      >
+        <img src="assets/icons/mobile/Vector (1).png" alt="Menu">
+      </button>
+
+      <div class="header-actions">
+        <div class="theme-toggle" role="group" aria-label="Alternar tema claro/escuro">
+          <img src="assets/icons/Rectangle%2059.png" data-src-dark="assets/icons/Rectangle%2059.png" data-src-light="assets/icons/Claro/Rectangle%2059.png" alt="" class="theme-toggle-bg" aria-hidden="true">
+          <button type="button" class="theme-btn" data-theme-set="light" aria-label="Modo claro">
+            <img src="assets/icons/modo_claro_sol.png" data-src-dark="assets/icons/modo_claro_sol.png" data-src-light="assets/icons/Claro/sol.png" alt="">
+          </button>
+          <button type="button" class="theme-btn" data-theme-set="dark" aria-label="Modo escuro">
+            <img src="assets/icons/modo_escuro_lua.png" data-src-dark="assets/icons/modo_escuro_lua.png" data-src-light="assets/icons/Claro/lua.png" alt="">
+          </button>
+        </div>
+
+        <a href="login.html" class="btn btn-image">
+          <img src="assets/icons/Fale%20conosco.png" data-src-dark="assets/icons/Fale%20conosco.png" data-src-light="assets/icons/Claro/Fale%20conosco.png" alt="Login">
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="mon-stage">
+    <img class="mon-stage-photo" src="assets/Monitoramento/imagem%20de%20fundo/Vaca%20conectada%20ao%20campo%20digital.png" alt="Vaca holandesa preta e branca com brinco amarelo A024 e coleira AGROSENSE iluminada em verde, em um campo ao pôr do sol.">
+  <div class="container mon-main">
+
+    <div class="mon-grid">
+
+      <!-- Hero -->
+      <section class="mon-hero" aria-labelledby="mon-title">
+
+        <div class="mon-hero-text">
+          <p class="mon-greeting">Olá, produtor!</p>
+          <h1 id="mon-title" class="mon-title">Acompanhe<br><span>sua vaca</span></h1>
+          <p class="mon-lead">Monitore os principais sinais fisiológicos em tempo real e mantenha sua vaca saudável.</p>
+        </div>
+
+        <button type="button" class="mon-cow-id" data-pending="Ficha do animal">
+          <span class="mon-cow-id-icon"><img class="mon-icon-tone" src="assets/Monitoramento/icones/vaca.png" alt="" aria-hidden="true"></span>
+          <span class="mon-cow-id-text">
+            <strong data-field="animal.id">—</strong>
+            <small data-field="animal.details">—</small>
+          </span>
+          <svg class="mon-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </section>
+
+      <!-- Indicadores -->
+      <section class="mon-cards" aria-label="Sinais vitais">
+
+        <article class="mon-card" data-vital="heartRate">
+          <header class="mon-card-head">
+            <span class="mon-card-icon"><img class="mon-icon-tone" src="assets/Monitoramento/icones/coracao_ecg.png" alt="" aria-hidden="true"></span>
+            <h2>Batimento cardíaco</h2>
+            <svg class="mon-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </header>
+          <div class="mon-card-body">
+            <p class="mon-value"><span data-part="value">—</span> <small data-part="unit">bpm</small></p>
+            <img class="mon-icon-tone mon-wave" src="assets/Monitoramento/icones/onda_ecg.png" alt="" aria-hidden="true">
+          </div>
+          <span class="mon-badge" data-part="status">Aguardando dados</span>
+        </article>
+
+        <article class="mon-card" data-vital="temperature">
+          <header class="mon-card-head">
+            <span class="mon-card-icon"><img class="mon-icon-tone" src="assets/Monitoramento/icones/termometro.png" alt="" aria-hidden="true"></span>
+            <h2>Temperatura</h2>
+            <svg class="mon-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </header>
+          <div class="mon-card-body">
+            <p class="mon-value"><span data-part="value">—</span> <small data-part="unit">°C</small></p>
+            <!-- Não há asset de onda para temperatura: traçado SVG simples -->
+            <svg class="mon-wave mon-wave-svg" viewBox="0 0 120 48" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M2 32 C14 32 18 22 30 24 S48 34 60 28 S78 16 90 20 S108 28 118 22"/>
+            </svg>
+          </div>
+          <span class="mon-badge" data-part="status">Aguardando dados</span>
+        </article>
+
+        <article class="mon-card" data-vital="respiratoryRate">
+          <header class="mon-card-head">
+            <span class="mon-card-icon"><img class="mon-icon-tone" src="assets/Monitoramento/icones/pulmoes.png" alt="" aria-hidden="true"></span>
+            <h2>Frequência respiratória</h2>
+            <svg class="mon-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </header>
+          <div class="mon-card-body">
+            <p class="mon-value"><span data-part="value">—</span> <small data-part="unit">rpm</small></p>
+            <img class="mon-icon-tone mon-wave mon-wave-resp" src="assets/Monitoramento/icones/onda_respiratoria.png" alt="" aria-hidden="true">
+          </div>
+          <span class="mon-badge" data-part="status">Aguardando dados</span>
+        </article>
+
+        <article class="mon-card mon-card-gps">
+          <header class="mon-card-head">
+            <span class="mon-card-icon"><img class="mon-icon-tone" src="assets/Monitoramento/icones/localizacao.png" alt="" aria-hidden="true"></span>
+            <h2>Localização (GPS)</h2>
+            <span class="mon-live" data-field="location.label">Indisponível</span>
+          </header>
+          <div class="mon-map" role="img" aria-label="Mapa de demonstração: não há localização real configurada.">
+            <svg class="mon-map-art" viewBox="0 0 320 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <rect width="320" height="140" class="map-bg"/>
+              <path class="map-field" d="M0 18 L70 8 L110 40 L60 62 L0 54Z M200 0 L320 0 L320 46 L250 58 L214 30Z M150 92 L232 80 L268 140 L170 140Z"/>
+              <path class="map-contour" d="M-10 96 C40 80 80 104 130 90 S220 60 330 78"/>
+              <path class="map-contour" d="M-10 118 C50 100 92 126 150 112 S240 86 330 102"/>
+              <path class="map-contour" d="M-10 34 C30 46 70 22 120 30 S200 48 330 24"/>
+              <path class="map-road" d="M-10 72 C60 66 110 80 160 70 S260 44 330 50"/>
+              <path class="map-road thin" d="M120 -10 C128 30 150 60 160 70 S176 120 182 150"/>
+              <path class="map-road thin" d="M250 -10 C246 20 252 40 262 52"/>
+            </svg>
+            <span class="mon-map-pin" aria-hidden="true"></span>
+            <span class="mon-map-caption">Localização de demonstração</span>
+            <svg class="mon-chevron mon-map-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </div>
+        </article>
+
+      </section>
+    </div>
+
+    <!-- Banner de estado -->
+    <section class="mon-banner" aria-live="polite">
+      <div class="mon-banner-status">
+        <img src="assets/Monitoramento/icones/onda_ecg.png" alt="" aria-hidden="true" class="mon-icon-tone mon-banner-icon">
+        <div>
+          <h2 data-field="summary.title">Aguardando dados</h2>
+          <p data-field="summary.text">Nenhuma leitura recebida da coleira até o momento.</p>
+        </div>
+      </div>
+      <a href="#" class="btn btn-primary mon-cta" data-pending="Histórico veterinário">
+        <img src="assets/Monitoramento/icones/documento.png" alt="" aria-hidden="true">
+        <span>Ver histórico veterinário</span>
+        <svg class="mon-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+    </section>
+
+    <p class="mon-demo-note" data-field="source.note" hidden></p>
+  </div>
+  </main>
+
+  <div class="mon-toast" role="status" aria-live="polite"></div>
+
+  <script src="js/main.js"></script>
+  <script src="js/monitoramento.js"></script>
+</body>
+</html>

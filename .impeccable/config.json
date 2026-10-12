@@ -1,0 +1,41 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-10-11T21:06:02.140Z",
+        "reason": "spec §3 names Inter; Inter is already the site's body font in css/style.css"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "monitoramento.html"
+        ],
+        "createdAt": "2026-10-11T21:06:07.113Z",
+        "reason": "spec AGROSENSE_CLAUDE_CODE_MONITORAMENTO.md §3/§7.2 asks for localized green glow on icons and GPS marker; decorative nav/CTA glows already removed"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "monitoramento.html"
+        ],
+        "createdAt": "2026-10-11T21:06:07.329Z",
+        "reason": "only hit is .mon-map, a full-bleed map graphic whose caption/chevron sit 10-12px inside via absolute positioning"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "monitoramento.html"
+        ],
+        "createdAt": "2026-10-12T13:26:12.775Z",
+        "reason": ".member-card::before lives in shared css/style.css (sobre.html team cards); monitoramento.html has no .member-card element"
+      }
+    ]
+  }
+}

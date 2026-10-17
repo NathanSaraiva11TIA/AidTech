@@ -450,3 +450,25 @@
 @media (prefers-reduced-motion: reduce) {
   .mon-map-pin::after { animation: none; }
 }
+
+
+/* ---------- Respiração ----------
+   Onda: <canvas> desenhado por js/monitoramento.js com o sinal real do sensor.
+   Ela só existe (classe .has-wave) enquanto chegam respiros; sem sinal, some.
+   Pulmão: com onda, o JS ajusta o tamanho conforme o sinal (inspira/expira de verdade).
+   Sem onda mas com rpm medido (firmware antigo), cai para a animação abaixo,
+   de 1 ciclo por respiração (--resp-period = 60 / rpm). */
+@keyframes mon-breathe-lung {
+  0%, 100% { transform: scale(.92); }
+  50%      { transform: scale(1.12); }
+}
+.mon-card .mon-wave-live { opacity: 0; transition: opacity .5s ease; }
+.mon-card.has-wave .mon-wave-live { opacity: 1; filter: none; }
+.mon-card.is-breathing .mon-card-icon img {
+  transform-origin: center;
+  animation: mon-breathe-lung var(--resp-period, 2.5s) ease-in-out infinite;
+}
+.mon-card.has-wave .mon-card-icon img { animation: none; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) {
+  .mon-card.is-breathing .mon-card-icon img { animation: none; }
+}

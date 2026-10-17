@@ -122,7 +122,8 @@
           </header>
           <div class="mon-card-body">
             <p class="mon-value"><span data-part="value">—</span> <small data-part="unit">rpm</small></p>
-            <img class="mon-icon-tone mon-wave mon-wave-resp" src="assets/Monitoramento/icones/onda_respiratoria.png" alt="" aria-hidden="true">
+            <!-- Onda ao vivo: desenhada por js/monitoramento.js com o sinal REAL do sensor (1 pacote por respiro) -->
+            <canvas class="mon-wave mon-wave-live" aria-hidden="true"></canvas>
           </div>
           <span class="mon-badge" data-part="status">Aguardando dados</span>
         </article>

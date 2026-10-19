@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer">
   <link rel="stylesheet" href="css/monitoramento.css">
 </head>
 <body class="mon-page">
@@ -93,7 +94,8 @@
           </header>
           <div class="mon-card-body">
             <p class="mon-value"><span data-part="value">—</span> <small data-part="unit">bpm</small></p>
-            <img class="mon-icon-tone mon-wave" src="assets/Monitoramento/icones/onda_ecg.png" alt="" aria-hidden="true">
+            <img class="mon-icon-tone mon-wave mon-wave-ecg-img" src="assets/Monitoramento/icones/onda_ecg.png" alt="" aria-hidden="true">
+            <canvas class="mon-wave mon-wave-live mon-wave-ecg" aria-hidden="true"></canvas>
           </div>
           <span class="mon-badge" data-part="status">Aguardando dados</span>
         </article>
@@ -106,9 +108,13 @@
           </header>
           <div class="mon-card-body">
             <p class="mon-value"><span data-part="value">—</span> <small data-part="unit">°C</small></p>
-            <!-- Não há asset de onda para temperatura: traçado SVG simples -->
-            <svg class="mon-wave mon-wave-svg" viewBox="0 0 120 48" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M2 32 C14 32 18 22 30 24 S48 34 60 28 S78 16 90 20 S108 28 118 22"/>
+            <!-- Termômetro que enche conforme a temperatura (altura da coluna definida em js/monitoramento.js) -->
+            <svg class="mon-wave mon-thermo" viewBox="0 0 40 100" aria-hidden="true">
+              <path class="mon-thermo-glass" d="M13 68 V11 A7 7 0 0 1 27 11 V68 A14 14 0 1 1 13 68 Z"/>
+              <rect class="mon-thermo-col" x="17.5" y="12" width="5" height="68" rx="2.5"/>
+              <circle class="mon-thermo-bulb" cx="20" cy="80" r="8"/>
+              <path class="mon-thermo-ticks" d="M23.5 22 H27 M23.5 34 H27 M23.5 46 H27"/>
+              <path class="mon-thermo-line" d="M13 68 V11 A7 7 0 0 1 27 11 V68 A14 14 0 1 1 13 68 Z"/>
             </svg>
           </div>
           <span class="mon-badge" data-part="status">Aguardando dados</span>
@@ -132,7 +138,6 @@
           <header class="mon-card-head">
             <span class="mon-card-icon"><img class="mon-icon-tone" src="assets/Monitoramento/icones/localizacao.png" alt="" aria-hidden="true"></span>
             <h2>Localização (GPS)</h2>
-            <span class="mon-live" data-field="location.label">Indisponível</span>
           </header>
           <div class="mon-map" role="img" aria-label="Mapa de demonstração: não há localização real configurada.">
             <svg class="mon-map-art" viewBox="0 0 320 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -145,6 +150,8 @@
               <path class="map-road thin" d="M120 -10 C128 30 150 60 160 70 S176 120 182 150"/>
               <path class="map-road thin" d="M250 -10 C246 20 252 40 262 52"/>
             </svg>
+            <!-- Mapa real (Leaflet + OpenStreetMap). Se não carregar, fica o desenho acima. -->
+            <div class="mon-map-tiles" aria-hidden="true"></div>
             <span class="mon-map-pin" aria-hidden="true"></span>
             <span class="mon-map-caption">Localização de demonstração</span>
             <svg class="mon-chevron mon-map-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
@@ -177,6 +184,7 @@
   <div class="mon-toast" role="status" aria-live="polite"></div>
 
   <script src="js/main.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="js/monitoramento.js"></script>
 </body>
 </html>

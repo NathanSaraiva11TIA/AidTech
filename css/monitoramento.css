@@ -278,30 +278,32 @@
 .mon-badge[data-status="atencao"] { color: #F1AC5B; background: rgba(241, 172, 91, .1); border-color: rgba(241, 172, 91, .35); }
 .mon-badge[data-status="alerta"] { color: #e5675a; background: rgba(229, 103, 90, .1); border-color: rgba(229, 103, 90, .35); }
 .mon-card.is-empty .mon-wave { opacity: .25; filter: grayscale(1); }
+/* Termômetro do card de temperatura: a coluna sobe conforme --thermo-nivel (0 a 1, definido no JS) */
+.mon-thermo {
+  --thermo-cor: var(--mon-accent-text);
+  overflow: visible;
+  transform: scale(1.35);
+  transform-origin: right center;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--thermo-cor) 45%, transparent));
+}
+.mon-card[data-status="atencao"] .mon-thermo { --thermo-cor: #F1AC5B; }
+.mon-card[data-status="alerta"] .mon-thermo { --thermo-cor: #e5675a; }
+.mon-thermo-glass { fill: var(--mon-accent-bg); }
+.mon-thermo-line { fill: none; stroke: var(--mon-accent-text); stroke-width: 3; }
+.mon-thermo-ticks { fill: none; stroke: var(--mon-accent-text); stroke-width: 2; stroke-linecap: round; }
+.mon-thermo-col,
+.mon-thermo-bulb { fill: var(--thermo-cor); transition: fill .4s ease; }
+.mon-thermo-col {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  transform: scaleY(var(--thermo-nivel, 0));
+  transition: transform .8s ease, fill .4s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mon-thermo-col { transition: none; }
+}
 
 /* ---------- Card GPS ---------- */
-.mon-live {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: .74rem;
-  font-weight: 600;
-  white-space: nowrap;
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-}
-.mon-live.is-live { color: var(--mon-accent-text); border-color: var(--mon-accent-line); }
-.mon-live.is-live::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
 .mon-map {
   position: relative;
   flex: 1;
@@ -336,11 +338,11 @@
   inset: -12px;
   border-radius: 50%;
   border: 1px solid rgba(141, 179, 101, .5);
-  animation: mon-pulse 2.4s ease-out infinite;
+  animation: mon-pulse 2.2s ease-out infinite;   /* sai da bolinha, expande um pouco e some */
 }
 @keyframes mon-pulse {
-  from { transform: scale(.5); opacity: 1; }
-  to   { transform: scale(1.8); opacity: 0; }
+  0%   { transform: scale(.4); opacity: .9; }   /* do tamanho da bolinha */
+  100% { transform: scale(1.1); opacity: 0; }
 }
 
 .mon-map-caption {
@@ -351,6 +353,31 @@
   color: #9aa4b2;
 }
 .mon-map-chevron { position: absolute; right: 10px; bottom: 9px; color: #9aa4b2; }
+
+/* Mapa real: tiles do OpenStreetMap invertidos (escuros) e recoloridos para o verde do site */
+.mon-map-tiles { position: absolute; inset: 0; z-index: 0; background: #0d1117; display: none; }
+.mon-map.has-tiles .mon-map-tiles { display: block; }
+.mon-map.has-tiles .mon-map-art,
+.mon-map.has-tiles > .mon-map-pin { display: none; }
+.mon-map-caption, .mon-map-chevron { z-index: 1; }
+.mon-map-tiles .leaflet-tile-pane { filter: invert(1) grayscale(1) brightness(.7) contrast(1.25) sepia(.9) hue-rotate(45deg) saturate(1.5); }
+.mon-map.has-tiles .mon-map-caption {
+  right: 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #c3cad3;
+  text-shadow: 0 1px 3px #0d1117, 0 0 8px #0d1117;
+}
+.mon-map-tiles .mon-map-marker .mon-map-pin { left: 0; top: 0; margin: 0; }
+.mon-map-tiles .leaflet-control-attribution {
+  background: rgba(13, 17, 23, .7);
+  color: #6b7480;
+  font-size: .6rem;
+  line-height: 1.4;
+  padding: 0 5px;
+}
+.mon-map-tiles .leaflet-control-attribution a { color: #8a939f; }
 
 /* ---------- Banner inferior ---------- */
 .mon-banner {
@@ -447,9 +474,6 @@
   .mon-cta { justify-content: center; white-space: normal; text-align: center; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .mon-map-pin::after { animation: none; }
-}
 
 
 /* ---------- Respiração ----------
@@ -472,3 +496,10 @@
 @media (prefers-reduced-motion: reduce) {
   .mon-card.is-breathing .mon-card-icon img { animation: none; }
 }
+
+/* ---------- Batimento ----------
+   Onda: <canvas> desenhado por js/monitoramento.js (ritmo = BPM do card).
+   Enquanto não há BPM ao vivo, continua a imagem estática onda_ecg.png. */
+.mon-card .mon-wave-ecg { display: none; }
+.mon-card.has-wave .mon-wave-ecg { display: block; }
+.mon-card.has-wave .mon-wave-ecg-img { display: none; }

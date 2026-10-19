@@ -30,6 +30,18 @@ module.exports = async function handler(req, res) {
     NUMERICOS.forEach(k => { saida[k] = r[k] === null ? null : Number(r[k]); });
     TEXTOS.forEach(k => { saida[k] = r[k]; });
 
+    // BPM e temperatura chegam em pacotes diferentes: usa o último valor de cada um (até 180 s)
+    for (const [campo, nivel] of [['bpm', 'bpm_nivel'], ['temperatura_c', 'temperatura_nivel']]) {
+      const [rs] = await getPool().execute(
+        'SELECT ' + campo + ' AS v, ' + nivel + ' AS n FROM ' + TABELA +
+        ' WHERE animal_id = ? AND ' + campo + ' IS NOT NULL AND criado_em >= NOW() - INTERVAL 180 SECOND' +
+        ' ORDER BY id DESC LIMIT 1',
+        [animal]
+      );
+      saida[campo] = rs.length ? Number(rs[0].v) : null;
+      saida[nivel] = rs.length ? rs[0].n : null;
+    }
+
     // Última medida respiratória VÁLIDA (a janela mais recente pode ter vindo sem valor)
     const [rv] = await getPool().execute(
       'SELECT resp_rpm, resp_nivel, TIMESTAMPDIFF(SECOND, criado_em, NOW()) AS idade_s ' +

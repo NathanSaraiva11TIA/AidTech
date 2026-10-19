@@ -37,6 +37,9 @@ const MONITOR_DATA = {
     });
   }
 
+  const TERMO_MIN = 15;   // °C com o termômetro vazio
+  const TERMO_MAX = 45;   // °C com o termômetro cheio
+
   function renderVital(card, vital) {
     const valueEl = card.querySelector('[data-part="value"]');
     const unitEl = card.querySelector('[data-part="unit"]');
@@ -51,6 +54,13 @@ const MONITOR_DATA = {
     badge.textContent = status ? STATUS_LABEL[status] + (vital.note ? ' · ' + vital.note : '') : 'Sem sinal';
     badge.dataset.status = status || 'none';
     card.classList.toggle('is-empty', !hasValue);
+    card.dataset.status = status || 'none';
+
+    // Temperatura: a coluna do termômetro enche de TERMO_MIN (vazio) a TERMO_MAX (cheio)
+    if (card.dataset.vital === 'temperature') {
+      const nivel = hasValue ? (Number(vital.value) - TERMO_MIN) / (TERMO_MAX - TERMO_MIN) : 0;
+      card.style.setProperty('--thermo-nivel', Math.min(1, Math.max(0, nivel)).toFixed(3));
+    }
 
     // Respiração: 1 ciclo da animação = 1 respiração (período = 60 / rpm segundos)
     if (card.dataset.vital === 'respiratoryRate') {
@@ -74,9 +84,6 @@ const MONITOR_DATA = {
     });
 
     const isDemo = data.source === 'demo';
-    const hasLocation = data.location && data.location.updatedAt;
-    setField('location.label', hasLocation && !isDemo ? 'Ao vivo' : (isDemo ? 'Demonstração' : 'Indisponível'));
-    document.querySelector('.mon-live').classList.toggle('is-live', Boolean(hasLocation && !isDemo));
 
     const vitals = Object.keys(data.vitals).map(function (k) { return data.vitals[k]; });
     const complete = vitals.every(function (v) { return v && v.value !== null && v.status; });
@@ -101,6 +108,156 @@ const MONITOR_DATA = {
   renderMonitor(MONITOR_DATA);
   window.renderMonitor = renderMonitor;
 
+  // ---------- Onda cardíaca ----------
+  // Mesmo raciocínio da onda respiratória: <canvas> que rola da direita para a esquerda,
+  // com o ritmo vindo do valor do card (BPM). O traçado é sintético e mais "reto": linha de
+  // base quase plana e um complexo QRS em cada batida, como o ícone onda_ecg.png.
+  const ECG_JANELA_MS = 2500;       // tempo mostrado na onda
+  const ECG_ATRASO_MS = 250;        // a batida só aparece inteira depois que passa
+  const ECG_SEM_SINAL_MS = 20000;   // sem valor novo há tanto tempo => a onda some
+  const ecgCard = document.querySelector('[data-vital="heartRate"]');
+  const ecgCanvas = ecgCard && ecgCard.querySelector('.mon-wave-ecg');
+  const ecgIcone = ecgCard && ecgCard.querySelector('.mon-card-icon img');
+  const ecgReduz = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ecg = { bpm: 0, atualizadoEm: 0, batidas: [], rodando: false, cor: '#8db365', corLida: 0 };
+
+  // Forma de uma batida, em segundos a partir do pico R: [centro, largura, altura]
+  const ECG_FORMA = [
+    [-0.160, 0.022,  0.02],   // onda P (quase imperceptível)
+    [-0.030, 0.008, -0.10],   // Q
+    [ 0.000, 0.012,  0.75],   // R (o pico)
+    [ 0.032, 0.012, -0.20],   // S
+    [ 0.230, 0.040,  0.03]    // onda T (baixa)
+  ];
+
+  function ecgValor(t, bat) {                                  // t em ms
+    let v = 0;                                                 // linha de base plana
+    for (let i = 0; i < bat.length; i++) {
+      const dt = (t - bat[i]) / 1000;
+      if (dt < -0.35 || dt > 0.55) continue;
+      for (let k = 0; k < ECG_FORMA.length; k++) {
+        const f = ECG_FORMA[k], z = (dt - f[0]) / f[1];
+        v += f[2] * Math.exp(-0.5 * z * z);
+      }
+    }
+    return v;
+  }
+
+  function ecgDesenhar(agora) {
+    const viva = ecg.bpm > 0 && agora - ecg.atualizadoEm < ECG_SEM_SINAL_MS;
+    ecgCard.classList.toggle('has-wave', viva);
+    if (!viva) {
+      const c0 = ecgCanvas.getContext('2d'); c0.clearRect(0, 0, ecgCanvas.width, ecgCanvas.height);
+      if (ecgIcone) ecgIcone.style.transform = '';
+      return false;
+    }
+    const periodo = 60000 / ecg.bpm;
+    const bat = ecg.batidas;
+    if (!bat.length || agora - bat[bat.length - 1] > 5000) {   // começo, ou aba ficou parada: recomeça cheio
+      bat.length = 0;
+      for (let t = agora; t > agora - ECG_JANELA_MS - 1500; t -= periodo) bat.unshift(t);
+    }
+    while (bat[bat.length - 1] < agora + 400) bat.push(bat[bat.length - 1] + periodo);
+    while (bat.length > 2 && bat[0] < agora - ECG_JANELA_MS - 1500) bat.shift();
+
+    const tShow = ecgReduz ? agora : agora - ECG_ATRASO_MS;
+
+    if (agora - ecg.corLida > 1000) {                          // acompanha o tema claro/escuro
+      const cor = getComputedStyle(ecgCanvas).getPropertyValue('--mon-accent-text').trim();
+      if (cor) ecg.cor = cor;
+      ecg.corLida = agora;
+    }
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(2, Math.round(ecgCanvas.clientWidth * dpr));
+    const h = Math.max(1, Math.round(ecgCanvas.clientHeight * dpr));
+    if (ecgCanvas.width !== w || ecgCanvas.height !== h) { ecgCanvas.width = w; ecgCanvas.height = h; }
+    const g = ecgCanvas.getContext('2d');
+    g.clearRect(0, 0, w, h);
+    g.lineWidth = 1.5 * dpr; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = ecg.cor;
+
+    const meio = h / 2;
+    g.beginPath();
+    for (let x = 0; x < w; x++) {
+      const t = tShow - ECG_JANELA_MS + x / (w - 1) * ECG_JANELA_MS;
+      const v = Math.max(-1, Math.min(1, ecgValor(t, bat)));
+      const y = meio - v * meio * 0.8;
+      if (x === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.stroke();
+
+    if (ecgIcone) {                                            // o coração dá uma leve batida a cada pico
+      let p = 0;
+      for (let i = 0; i < bat.length; i++) {
+        const z = (tShow - bat[i]) / 90;
+        if (Math.abs(z) < 4) p = Math.max(p, Math.exp(-0.5 * z * z));
+      }
+      ecgIcone.style.transformOrigin = 'center';
+      ecgIcone.style.transform = 'scale(' + (1 + 0.14 * p).toFixed(3) + ')';
+    }
+    return true;
+  }
+
+  function ecgQuadro(agora) {
+    if (ecgDesenhar(agora)) requestAnimationFrame(ecgQuadro); else ecg.rodando = false;
+  }
+
+  // Chamada a cada leitura da API com o BPM atual (null/0 = sem sinal: a onda some)
+  function ecgDefinir(bpm) {
+    if (!ecgCanvas) return;
+    if (!(bpm > 0)) { ecg.bpm = 0; if (!ecg.rodando) ecgDesenhar(performance.now()); return; }
+    ecg.bpm = bpm;
+    ecg.atualizadoEm = performance.now();
+    if (ecgReduz) { ecg.batidas = []; ecgDesenhar(ecg.atualizadoEm); return; }   // sem animação: quadro parado
+    if (!ecg.rodando) { ecg.rodando = true; requestAnimationFrame(ecgQuadro); }
+  }
+
+  // ---------- Mapa do GPS ----------
+  // Mapa real (Leaflet + tiles do OpenStreetMap), recolorido no CSS. Sem GPS da coleira,
+  // mostra o UNASP São Paulo como local de referência; com latitude/longitude, segue a coleira.
+  const MAPA_REF = { lat: -23.66595, lng: -46.77918, nome: 'UNASP São Paulo (referência)' };
+  const MAPA_ZOOM = 17;
+  const mapaBox = document.querySelector('.mon-map');
+  const mapaEl = mapaBox && mapaBox.querySelector('.mon-map-tiles');
+  const mapaLegenda = mapaBox && mapaBox.querySelector('.mon-map-caption');
+  let mapa = null, mapaPino = null, mapaAoVivo = false;
+
+  if (mapaEl && window.L) {
+    mapa = L.map(mapaEl, {
+      center: [MAPA_REF.lat, MAPA_REF.lng],
+      zoom: MAPA_ZOOM,
+      zoomControl: false,
+      scrollWheelZoom: false,
+      attributionControl: true
+    });
+    mapa.attributionControl.setPrefix(false).setPosition('topright');
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(mapa);
+    mapaPino = L.marker([MAPA_REF.lat, MAPA_REF.lng], {
+      keyboard: false,
+      icon: L.divIcon({ className: 'mon-map-marker', html: '<span class="mon-map-pin"></span>', iconSize: [14, 14] })
+    }).addTo(mapa);
+    mapaBox.classList.add('has-tiles');
+    // o card muda de tamanho depois que a página termina o layout: o Leaflet precisa recalcular
+    if (window.ResizeObserver) new ResizeObserver(function () { mapa.invalidateSize(); }).observe(mapaEl);
+    mapaBox.setAttribute('aria-label', 'Mapa: ' + MAPA_REF.nome + '.');
+    if (mapaLegenda) mapaLegenda.textContent = MAPA_REF.nome;
+  }
+
+  // Chamada a cada leitura da API: { lat, lng } da coleira, ou null para voltar à referência
+  function mapaDefinir(loc) {
+    if (!mapa) return;
+    const vivo = Boolean(loc);
+    const pos = vivo ? [loc.lat, loc.lng] : [MAPA_REF.lat, MAPA_REF.lng];
+    mapaPino.setLatLng(pos);
+    if (vivo || mapaAoVivo) mapa.panTo(pos, { animate: !ecgReduz });
+    mapaAoVivo = vivo;
+    const texto = vivo ? 'Posição da coleira' : MAPA_REF.nome;
+    if (mapaLegenda) mapaLegenda.textContent = texto;
+    mapaBox.setAttribute('aria-label', 'Mapa: ' + texto + '.');
+  }
+
   // ---- Leitura real da coleira (API) ----
   // O ESP32 envia 1 medida por minuto para /api/leituras; aqui o card consulta a
   // última leitura. Enquanto nenhuma chegar (ou se a API estiver fora do ar), a
@@ -108,7 +265,7 @@ const MONITOR_DATA = {
   // ainda não mede (batimento, temperatura, GPS) passa a mostrar "Sem sinal",
   // em vez de exibir valores de demonstração como se fossem reais.
   const ANIMAL_ID = MONITOR_DATA.animal.id;
-  const POLL_MS = 15000;        // consulta a cada 15 s
+  const POLL_MS = 3000;        // consulta a cada 3 s
   const VALIDADE_S = 180;       // sem leitura há mais de 3 min => "Sem sinal"
   const VALIDADE_RESP_S = 300;  // respiração: mantém a última medida válida por até 5 min
   const NIVEL_STATUS = { NORMAL: 'normal', ATENCAO: 'atencao', ALARME: 'alerta' };
@@ -149,7 +306,12 @@ const MONITOR_DATA = {
       temperature:     sinal(l.temperatura_c, l.temperatura_nivel, '°C',  false),
       respiratoryRate: respiracao(l)
     };
+    const temGps = recente && l.latitude !== null && l.latitude !== undefined && l.longitude !== null && l.longitude !== undefined;
+    MONITOR_DATA.location = temGps ? { lat: l.latitude, lng: l.longitude, updatedAt: Date.now() } : null;
     renderMonitor(MONITOR_DATA);
+    ecgDefinir(MONITOR_DATA.vitals.heartRate.value);
+    respDefinir(MONITOR_DATA.vitals.respiratoryRate.value);
+    mapaDefinir(MONITOR_DATA.location);
   }
 
   async function buscarLeitura() {
@@ -166,64 +328,56 @@ const MONITOR_DATA = {
   setInterval(buscarLeitura, POLL_MS);
 
   // ---------- Onda respiratória ao vivo ----------
-  // O ESP32 manda 1 pacote POR RESPIRO com o trecho real do sinal (em mg). Aqui os
-  // trechos viram uma linha do tempo e a onda é desenhada com esses valores:
-  // amplitude e velocidade vêm do sensor. Sem respiros chegando, a onda some.
-  const RESP_POLL_MS = 2000;     // consulta respiros novos a cada 2 s
-  const ESCALA_MG = 50;          // ±50 mg ocupa a altura toda da onda
+  // Onda sintética e suave: o ritmo vem do rpm mostrado no card (1 ciclo = 1 respiração,
+  // período = 60 / rpm s). A fase é acumulada quadro a quadro, então mudar o rpm não dá salto.
   const JANELA_MS = 12000;       // tempo mostrado na onda
-  const ATRASO_MS = 4000;        // mostra o passado recente: o respiro só é conhecido depois que termina
-  const SEM_SINAL_MS = 15000;    // sem respiro novo há tanto tempo => a onda some
-  const IDADE_MAX_S = 30;        // respiros mais velhos que isso são ignorados
+  const SEM_SINAL_MS = 15000;    // sem rpm novo há tanto tempo => a onda some
+  const INSPIRA = 0.42;          // fração do ciclo subindo (inspira um pouco mais rápido que expira)
+  const AMPLITUDE = 0.7;         // altura da onda em relação ao canvas
 
   const respCard = document.querySelector('[data-vital="respiratoryRate"]');
   const canvas = respCard && respCard.querySelector('.mon-wave-live');
   const pulmao = respCard && respCard.querySelector('.mon-card-icon img');
-  const reduzMovimento = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const onda = { pontos: [], ultimoId: 0, fimMs: 0, cor: '#8db365', corLida: 0, rodando: false };
+  const onda = { rpm: 0, atualizadoEm: 0, fase: 0, tFase: 0, hist: [], cor: '#8db365', corLida: 0, rodando: false };
 
-  function adicionarRespiros(lista, agora) {
-    lista.forEach(function (r) {
-      onda.ultimoId = Math.max(onda.ultimoId, r.id);
-      if (r.idade_s > IDADE_MAX_S || !r.am || r.am.length < 2) return;
-      const periodo = r.periodo_ms;
-      const estimado = agora - r.idade_s * 1000;               // quando o respiro terminou (± 1 s)
-      const seguido = onda.fimMs && Math.abs(estimado - (onda.fimMs + periodo)) < 2500;
-      const fim = seguido ? onda.fimMs + periodo : estimado;   // encadeia respiros seguidos
-      const dt = periodo / (r.am.length - 1);
-      const t0 = fim - periodo;
-      for (let k = seguido ? 1 : 0; k < r.am.length; k++) {    // o 1º ponto repete o último do respiro anterior
-        onda.pontos.push({ t: t0 + k * dt, v: r.am[k] });
-      }
-      onda.fimMs = fim;
-    });
-    const corte = agora - JANELA_MS - ATRASO_MS - 5000;
-    while (onda.pontos.length && onda.pontos[0].t < corte) onda.pontos.shift();
+  // Forma de um ciclo (fase em voltas): sobe de -1 a 1 na inspiração, desce na expiração, sem quinas
+  function formaResp(voltas) {
+    const p = voltas - Math.floor(voltas);
+    return p < INSPIRA ? -Math.cos(Math.PI * p / INSPIRA) : Math.cos(Math.PI * (p - INSPIRA) / (1 - INSPIRA));
   }
 
-  function valorEm(t) {
-    const p = onda.pontos;
-    if (!p.length || t < p[0].t) return 0;
-    for (let i = p.length - 1; i > 0; i--) {
-      if (p[i - 1].t <= t) {
-        if (t >= p[i].t) return p[i].v;
-        const f = (t - p[i - 1].t) / (p[i].t - p[i - 1].t || 1);
-        return p[i - 1].v + f * (p[i].v - p[i - 1].v);
+  // Fase (em voltas) no instante t: interpola o histórico; antes dele, extrapola com o rpm atual
+  function faseEm(t) {
+    const h = onda.hist;
+    if (!h.length || t <= h[0].t) {
+      const t0 = h.length ? h[0].t : onda.tFase, f0 = h.length ? h[0].fase : onda.fase;
+      return f0 - (t0 - t) / 1000 * onda.rpm / 60;
+    }
+    for (let i = h.length - 1; i > 0; i--) {
+      if (h[i - 1].t <= t) {
+        if (t >= h[i].t) return h[i].fase;
+        const f = (t - h[i - 1].t) / (h[i].t - h[i - 1].t || 1);
+        return h[i - 1].fase + f * (h[i].fase - h[i - 1].fase);
       }
     }
-    return p[0].v;
+    return h[0].fase;
   }
 
   function desenhar(agora) {
-    const viva = onda.fimMs > 0 && agora - onda.fimMs < SEM_SINAL_MS + ATRASO_MS;
+    const viva = onda.rpm > 0 && agora - onda.atualizadoEm < SEM_SINAL_MS;
     respCard.classList.toggle('has-wave', viva);
     if (!viva) {
-      onda.pontos = []; onda.fimMs = 0;
+      onda.hist = [];
       if (pulmao) pulmao.style.transform = '';
       const c0 = canvas.getContext('2d'); c0.clearRect(0, 0, canvas.width, canvas.height);
       return false;
     }
-    const tShow = reduzMovimento ? onda.fimMs : agora - ATRASO_MS;
+
+    // fase += dt * rpm/60 (em voltas; 1 volta = 2π)
+    if (onda.tFase) onda.fase += Math.max(0, agora - onda.tFase) / 1000 * onda.rpm / 60;
+    onda.tFase = agora;
+    onda.hist.push({ t: agora, fase: onda.fase });
+    while (onda.hist.length > 2 && onda.hist[1].t < agora - JANELA_MS - 1000) onda.hist.shift();
 
     if (agora - onda.corLida > 1000) {                         // acompanha o tema claro/escuro
       const cor = getComputedStyle(canvas).getPropertyValue('--mon-accent-text').trim();
@@ -231,7 +385,7 @@ const MONITOR_DATA = {
       onda.corLida = agora;
     }
     const dpr = window.devicePixelRatio || 1;
-    const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
+    const w = Math.max(2, Math.round(canvas.clientWidth * dpr));
     const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
     const g = canvas.getContext('2d');
@@ -239,24 +393,17 @@ const MONITOR_DATA = {
     g.lineWidth = 2.5 * dpr; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = onda.cor;
 
     const meio = h / 2;
-    const xDe = t => (t - (tShow - JANELA_MS)) / JANELA_MS * w;
-    const yDe = v => meio - Math.max(-1, Math.min(1, v / ESCALA_MG)) * meio * 0.9;
     g.beginPath();
-    let ant = null, abriu = false;
-    onda.pontos.forEach(function (p) {
-      if (p.t > tShow || p.t < tShow - JANELA_MS - 600) return;
-      const x = xDe(p.t), y = yDe(p.v);
-      if (!abriu || (ant && p.t - ant.t > 1500)) { g.moveTo(x, y); abriu = true; }   // buraco = respiro descartado
-      else { const mx = (ant.x + x) / 2, my = (ant.y + y) / 2; g.quadraticCurveTo(ant.x, ant.y, mx, my); }
-      ant = { x: x, y: y, t: p.t };
-    });
-    if (ant) g.lineTo(ant.x, ant.y);
+    for (let x = 0; x < w; x++) {                              // rola da direita (agora) para a esquerda
+      const t = agora - JANELA_MS + x / (w - 1) * JANELA_MS;
+      const y = meio - formaResp(faseEm(t)) * meio * AMPLITUDE;
+      if (x === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
     g.stroke();
 
-    if (pulmao) {                                              // o pulmão enche e esvazia com o sinal real
-      const f = Math.max(-1, Math.min(1, valorEm(tShow) / ESCALA_MG));
+    if (pulmao) {                                              // o pulmão enche e esvazia com a onda
       pulmao.style.transformOrigin = 'center';
-      pulmao.style.transform = 'scale(' + (1 + 0.12 * f).toFixed(3) + ')';
+      pulmao.style.transform = 'scale(' + (1 + 0.12 * formaResp(onda.fase)).toFixed(3) + ')';
     }
     return true;
   }
@@ -265,31 +412,13 @@ const MONITOR_DATA = {
     if (desenhar(agora)) requestAnimationFrame(quadro); else onda.rodando = false;
   }
 
-  function iniciarDesenho() {
-    const agora = performance.now();
-    if (reduzMovimento) { desenhar(agora); return; }            // sem animação: mostra o último respiro parado
-    if (!onda.rodando && onda.fimMs) { onda.rodando = true; requestAnimationFrame(quadro); }
-  }
-
-  async function buscarRespiros() {
-    if (document.visibilityState === 'hidden') return;
-    try {
-      const url = '/api/respiros/recentes?animal_id=' + encodeURIComponent(ANIMAL_ID) +
-                  (onda.ultimoId ? '&apos_id=' + onda.ultimoId : '');
-      const r = await fetch(url, { cache: 'no-store' });
-      if (!r.ok) return;                                       // tabela ainda não criada ou API fora do ar
-      const dados = await r.json();
-      adicionarRespiros(dados.respiros || [], performance.now());
-      iniciarDesenho();
-    } catch (e) {
-      // offline ou sem API: a onda simplesmente não aparece
-    }
-  }
-
-  if (canvas) {
-    buscarRespiros();
-    setInterval(buscarRespiros, RESP_POLL_MS);
-    setInterval(function () { if (!onda.rodando && onda.fimMs) desenhar(performance.now()); }, 3000);  // apaga a onda se parar de chegar
+  // Chamada a cada leitura da API com o rpm do card (null/0 = sem medida válida: a onda some)
+  function respDefinir(rpm) {
+    if (!canvas) return;
+    if (!(rpm > 0)) { onda.rpm = 0; if (!onda.rodando) desenhar(performance.now()); return; }
+    onda.rpm = rpm;
+    onda.atualizadoEm = performance.now();
+    if (!onda.rodando) { onda.rodando = true; onda.tFase = 0; requestAnimationFrame(quadro); }
   }
 
   // Itens sem página ainda: avisa em vez de fingir navegação.

@@ -69,27 +69,52 @@ if (menuToggle && mainNav) {
 const productGrid = document.querySelector('.product-grid');
 const arrowLeft = document.querySelector('.carousel-arrow-left');
 const arrowRight = document.querySelector('.carousel-arrow-right');
-const dots = document.querySelectorAll('.carousel-dots .dot');
+const dotsWrap = document.querySelector('.carousel-dots');
 
 if (productGrid && arrowLeft && arrowRight) {
+  // distância entre o início de um card e o do próximo (largura + gap)
+  function cardStep() {
+    const cards = productGrid.children;
+    if (cards.length < 2) return productGrid.clientWidth;
+    return cards[1].offsetLeft - cards[0].offsetLeft;
+  }
+
   function scrollToCard(direction) {
-    productGrid.scrollBy({ left: direction * productGrid.clientWidth, behavior: 'smooth' });
+    productGrid.scrollBy({ left: direction * cardStep(), behavior: 'smooth' });
   }
 
   arrowLeft.addEventListener('click', function () { scrollToCard(-1); });
   arrowRight.addEventListener('click', function () { scrollToCard(1); });
 
-  if (dots.length) {
+  if (dotsWrap) {
+    // um dot por posição possível do carrossel (varia com quantos cards cabem na tela)
+    function updateDots() {
+      const step = cardStep();
+      const maxScroll = productGrid.scrollWidth - productGrid.clientWidth;
+      const total = Math.max(1, Math.round(maxScroll / step) + 1);
+      const index = Math.min(total - 1, Math.round(productGrid.scrollLeft / step));
+
+      if (dotsWrap.children.length !== total) {
+        dotsWrap.innerHTML = '';
+        for (let i = 0; i < total; i++) {
+          const dot = document.createElement('span');
+          dot.className = 'dot';
+          dotsWrap.appendChild(dot);
+        }
+      }
+
+      Array.prototype.forEach.call(dotsWrap.children, function (dot, i) {
+        dot.classList.toggle('is-active', i === index);
+      });
+    }
+
     let scrollTimeout;
     productGrid.addEventListener('scroll', function () {
       clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(function () {
-        const index = Math.round(productGrid.scrollLeft / productGrid.clientWidth);
-        dots.forEach(function (dot, i) {
-          dot.classList.toggle('is-active', i === index);
-        });
-      }, 100);
+      scrollTimeout = setTimeout(updateDots, 100);
     });
+    window.addEventListener('resize', updateDots);
+    updateDots();
   }
 }
 
@@ -171,5 +196,49 @@ if (productGrid && arrowLeft && arrowRight) {
   fullscreenBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     if (card.requestFullscreen) card.requestFullscreen();
+  });
+})();
+(function () {
+  const form = document.getElementById('contactForm');
+  if (!form) return;
+
+  const status = document.getElementById('contactStatus');
+  const button = form.querySelector('button[type="submit"]');
+
+  function showStatus(text, isError) {
+    status.textContent = text;
+    status.classList.toggle('is-error', !!isError);
+    status.hidden = false;
+  }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    if (!form.checkValidity()) {
+      showStatus('Preencha nome, um e-mail válido e a mensagem.', true);
+      form.reportValidity();
+      return;
+    }
+
+    const data = Object.fromEntries(new FormData(form));
+    button.disabled = true;
+    showStatus('Enviando...', false);
+
+    try {
+      const res = await fetch('/api/contato', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const body = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(body.erro || 'falha ao enviar');
+
+      form.reset();
+      showStatus('Mensagem enviada! Em breve entraremos em contato.', false);
+    } catch (err) {
+      showStatus('Não foi possível enviar agora. Tente novamente em instantes.', true);
+    } finally {
+      button.disabled = false;
+    }
   });
 })();

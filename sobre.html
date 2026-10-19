@@ -187,33 +187,41 @@
             </div>
           </div>
 
-          <form class="contact-card">
+          <form class="contact-card" id="contactForm" novalidate>
             <div class="form-grid">
               <div class="field">
                 <label for="nome">Nome</label>
-                <input id="nome" type="text" placeholder="Seu nome completo">
+                <input id="nome" name="nome" type="text" placeholder="Seu nome completo" maxlength="100" required>
               </div>
 
               <div class="field">
                 <label for="email">E-mail</label>
-                <input id="email" type="email" placeholder="voce@email.com">
+                <input id="email" name="email" type="email" placeholder="voce@email.com" maxlength="150" required>
               </div>
 
               <div class="field">
                 <label for="assunto">Assunto</label>
-                <input id="assunto" type="text" placeholder="Sobre o que deseja falar?">
+                <input id="assunto" name="assunto" type="text" placeholder="Sobre o que deseja falar?" maxlength="150">
               </div>
 
               <div class="field">
                 <label for="telefone">Telefone</label>
-                <input id="telefone" type="tel" placeholder="(00) 00000-0000">
+                <input id="telefone" name="telefone" type="tel" placeholder="(00) 00000-0000" maxlength="30">
               </div>
 
               <div class="field full">
                 <label for="mensagem">Mensagem</label>
-                <textarea id="mensagem" placeholder="Conte um pouco mais sobre sua mensagem..."></textarea>
+                <textarea id="mensagem" name="mensagem" placeholder="Conte um pouco mais sobre sua mensagem..." maxlength="5000" required></textarea>
+              </div>
+
+              <!-- isca anti-spam: invisível para pessoas, bots costumam preencher -->
+              <div class="field-hp" aria-hidden="true">
+                <label for="site">Site</label>
+                <input id="site" name="site" type="text" tabindex="-1" autocomplete="off">
               </div>
             </div>
+
+            <p class="form-status" id="contactStatus" role="status" aria-live="polite" hidden></p>
 
             <div class="form-bottom">
               <p class="privacy">
